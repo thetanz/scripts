@@ -1,0 +1,36 @@
+<!--
+url query input of 'name' & 'type'
+i.e ?theta.co.nz&type=txt
+-->
+<policies>
+    <inbound>
+        <set-variable name="name" value="@(context.Request.OriginalUrl.Query.GetValueOrDefault("name"))" />
+        <set-variable name="type" value="@(context.Request.OriginalUrl.Query.GetValueOrDefault("type"))" />
+        <send-request mode="new" response-variable-name="doh_lookup" timeout="20" ignore-error="false">
+            <set-url>@($"https://cloudflare-dns.com/dns-query?name={(string)context.Variables["name"]}&type={(string)context.Variables["type"]}")</set-url>
+            <set-method>GET</set-method>
+            <set-header name="accept" exists-action="override">
+                <value>application/dns-json</value>
+            </set-header>
+        </send-request>
+        <!-- handle responses -->
+        <return-response response-variable-name="doh_lookup">
+            <set-status code="200" reason="OK" />
+            <set-header name="Content-Type" exists-action="override">
+                <value>application/json</value>
+            </set-header>
+            <set-body>@(new JObject(new JProperty("doh_lookup",((IResponse)context.Variables["doh_lookup"]).Body.As<JObject>())
+              ).ToString())</set-body>
+        </return-response>
+        <base />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

@@ -1,0 +1,104 @@
+<!--
+change your-vault-name accordingly
+demo APIM policy to request info from a number of web properties
+uses key vault for authentication, returning multiple objects in a single request
+-->
+<policies>
+    <inbound>
+        <!-- establish query value and set as variable -->
+        <!--
+        <set-variable name="consumerip" value="@(context.Request.OriginalUrl.Query.GetValueOrDefault("ip"))" />
+        -->
+        <!-- establish requester IP -->
+        <set-variable name="consumerip" value="@(context.Request.IpAddress)" />
+        <!-- remove azure apim authentication from further requests -->
+        <set-query-parameter name="subscription-key" exists-action="delete" />
+        <!-- get API key for ipstack from keyvault as a managed identity -->
+        <send-request mode="new" response-variable-name="api-ipstack" timeout="20" ignore-error="false">
+            <set-url>https://your-vault-name.vault.azure.net/secrets/api-ipstack/?api-version=2016-10-01</set-url>
+            <set-method>GET</set-method>
+            <authentication-managed-identity resource="https://vault.azure.net" />
+        </send-request>
+        <!-- set API key for ipstack from key vault as as variable -->
+        <set-variable name="key-ipstack" value="@(((IResponse)context.Variables["api-ipstack"]).Body.As<JObject>()["value"].ToString())" />
+        <!-- make authenticated request to ipstack -->
+        <send-request mode="new" response-variable-name="ipstack" timeout="30" ignore-error="false">
+            <set-url>@($"https://api.ipstack.com/{(string)context.Variables["consumerip"]}?access_key={(string)context.Variables["key-ipstack"]}")</set-url>
+            <set-method>GET</set-method>
+        </send-request>
+        <!-- get API key for virustotal from keyvault as a managed identity -->
+        <send-request mode="new" response-variable-name="api-virustotal" timeout="20" ignore-error="false">
+            <set-url>https://your-vault-name.vault.azure.net/secrets/api-virustotal/?api-version=2016-10-01</set-url>
+            <set-method>GET</set-method>
+            <authentication-managed-identity resource="https://vault.azure.net" />
+        </send-request>
+        <!-- set API key for virustotal from key vault as as variable -->
+        <set-variable name="key-virustotal" value="@(((IResponse)context.Variables["api-virustotal"]).Body.As<JObject>()["value"].ToString())" />
+        <!-- make authenticated request to virustotal communicating_files endpoint -->
+        <send-request mode="new" response-variable-name="virustotal_communicating_files" timeout="30" ignore-error="false">
+            <set-url>@($"https://www.virustotal.com/api/v3/ip_addresses/{(string)context.Variables["consumerip"]}/communicating_files")</set-url>
+            <set-method>GET</set-method>
+            <set-header name="x-apikey" exists-action="override">
+                <value>@((string)context.Variables["key-virustotal"])</value>
+            </set-header>
+        </send-request>
+        <!-- make authenticated request to virustotal referrer_files endpoint -->
+        <send-request mode="new" response-variable-name="virustotal_referrer_files" timeout="30" ignore-error="false">
+            <set-url>@($"https://www.virustotal.com/api/v3/ip_addresses/{(string)context.Variables["consumerip"]}/referrer_files")</set-url>
+            <set-method>GET</set-method>
+            <set-header name="x-apikey" exists-action="override">
+                <value>@((string)context.Variables["key-virustotal"])</value>
+            </set-header>
+        </send-request>
+        <!-- make authenticated request to virustotal resolutions endpoint -->
+        <send-request mode="new" response-variable-name="virustotal_resolutions" timeout="30" ignore-error="false">
+            <set-url>@($"https://www.virustotal.com/api/v3/ip_addresses/{(string)context.Variables["consumerip"]}/resolutions")</set-url>
+            <set-method>GET</set-method>
+            <set-header name="x-apikey" exists-action="override">
+                <value>@((string)context.Variables["key-virustotal"])</value>
+            </set-header>
+        </send-request>
+        <!-- get API key for shodan from keyvault as a managed identity -->
+        <send-request mode="new" response-variable-name="api-shodan" timeout="20" ignore-error="false">
+            <set-url>https://your-vault-name.vault.azure.net/secrets/api-shodan/?api-version=2016-10-01</set-url>
+            <set-method>GET</set-method>
+            <authentication-managed-identity resource="https://vault.azure.net" />
+        </send-request>
+        <!-- set API key for shodan from key vault as as variable -->
+        <set-variable name="key-shodan" value="@(((IResponse)context.Variables["api-shodan"]).Body.As<JObject>()["value"].ToString())" />
+        <!-- make authenticated request to shodan reversedns endpoint -->
+        <send-request mode="new" response-variable-name="shodan_host" timeout="30" ignore-error="false">
+            <set-url>@($"https://api.shodan.io/dns/reverse?ips={(string)context.Variables["consumerip"]}&key={(string)context.Variables["key-shodan"]}")</set-url>
+            <set-method>GET</set-method>
+        </send-request>
+        <!-- make authenticated request to shodan hosts endpoint -->
+        <send-request mode="new" response-variable-name="shodan_reverse" timeout="30" ignore-error="false">
+            <set-url>@($"https://api.shodan.io/shodan/host/{(string)context.Variables["consumerip"]}?key={(string)context.Variables["key-shodan"]}")</set-url>
+            <set-method>GET</set-method>
+        </send-request>
+        <!-- handle responses -->
+        <return-response response-variable-name="ipinfo">
+            <set-status code="200" reason="OK" />
+            <set-header name="Content-Type" exists-action="override">
+                <value>application/json</value>
+            </set-header>
+            <set-body>@(new JObject(new JProperty("ipstack",((IResponse)context.Variables["ipstack"]).Body.As<JObject>()),
+              new JProperty("virustotal_communicating_files",((IResponse)context.Variables["virustotal_communicating_files"]).Body.As<JObject>()),
+              new JProperty("virustotal_referrer_files",((IResponse)context.Variables["virustotal_referrer_files"]).Body.As<JObject>()),
+              new JProperty("virustotal_resolutions",((IResponse)context.Variables["virustotal_resolutions"]).Body.As<JObject>()),
+              new JProperty("shodan_host",((IResponse)context.Variables["shodan_host"]).Body.As<JObject>()),
+              new JProperty("shodan_reverse",((IResponse)context.Variables["shodan_reverse"]).Body.As<JObject>())
+              ).ToString())</set-body>
+        </return-response>
+        <base />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>
