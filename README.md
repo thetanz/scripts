@@ -1,23 +1,9 @@
-![](https://avatars0.githubusercontent.com/u/2897191?s=70&v=4)
+![](https://avatars0.githubusercontent.com/u/2897191?s=95&v=4)
 
-<!-- https://guides.github.com/pdfs/markdown-cheatsheet-online.pdf -->
+# 🏃🏽💨 scripts
 
-# Project Title
-
-This section should contain a brief summary of the repository
-
-### Things to do
-
-- [ ] update this file
-
-[Link to Something](https://theta.co.nz)
+a collection of scripts for doing things
 
 ---
-***some subsection can go here***
 
-> this is a block of subtext
-
-    you can enter freeform text here
-
----
-- 2021 <a href="https://www.theta.co.nz" target="_blank">Theta</a>.
+[Theta](https://www.theta.co.nz)
