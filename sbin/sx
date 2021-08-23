@@ -1,0 +1,4 @@
+#!/bin/bash
+# set executable on file
+test ! -f "$1" && echo "Must have var1 as filename to make executable" >&2 && exit 1
+chmod +x "$1"

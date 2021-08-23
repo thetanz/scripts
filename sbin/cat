@@ -1,0 +1,4 @@
+#!/bin/bash
+# Replace cat with bat so we get awesome output
+
+bat -pp "$@"

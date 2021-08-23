@@ -1,0 +1,12 @@
+#!/bin/bash
+# Print the source code of any script in this directory
+
+sourcedir=${PWD}
+cd "$(dirname "$0")"
+if [[ -f "$1" ]] ; then
+  which bat &>/dev/null && bat -pp "$1" || cat "$1"
+else
+  echo "No such script: ${1}" >&2
+  exit 1
+fi
+

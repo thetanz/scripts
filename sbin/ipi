@@ -1,0 +1,3 @@
+#!/bin/bash
+# Query IP API for any IP details
+curl "http://ip-api.com/${1}"

@@ -1,0 +1,4 @@
+#!/bin/bash
+# search the scripts directory for keyword
+cd "$(dirname "$0")"
+grep -ir --color "$@" *

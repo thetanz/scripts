@@ -1,0 +1,15 @@
+#!/bin/bash
+# Update your platform. Only debian based rn and expects a low priv user
+
+set -e
+hostdetails=$( uname -a )
+if [[ "${hostdetails}" == *Darwin* ]]
+then
+  softwareupdate --install -a
+  brew update
+  brew upgrade
+elif [[ "${hostdetails}" == *microsoft* ]]
+then
+  sudo apt update -y
+  sudo apt upgrade -y
+fi

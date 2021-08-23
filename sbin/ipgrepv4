@@ -1,0 +1,3 @@
+#!/bin/bash
+# Reed stdin an list nay IPv4 addressees
+grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'

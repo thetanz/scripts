@@ -1,0 +1,8 @@
+#!/bin/bash
+# Quick dehashed query
+
+source ~/.dehashedcreds
+URL="https://api.dehashed.com/search?query="
+QUERY="$1"
+test -z "{$QUERY}" && echo "Must have var1 to search" >&2 && exit 1 ||:
+curl -s --header "Accept: application/json" -u "${DEHASHED_USER}:${DEHASHED_SECRET}" "${URL}${QUERY}" | jq '.'

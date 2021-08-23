@@ -1,0 +1,5 @@
+#!/bin/bash
+# Updates this script dir. i.e. run binupd to get the latest scripts
+
+cd "$(dirname "$0")"
+git pull

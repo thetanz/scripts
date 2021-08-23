@@ -1,0 +1,3 @@
+#!/bin/bash
+# start azure function in current dir
+func start

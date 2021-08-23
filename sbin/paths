@@ -1,0 +1,21 @@
+#!/bin/bash
+# Check for and apply our binaries to the system paths. Ensure git is installed and configured
+
+if [[ ! -f ~/.bash_profile ]] ; then
+	echo "Creating file '~/.bash_profile'"
+	echo 'if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$HOME/scripts/sbin:$PATH
+export PATH
+. setprompt' > ~/.bash_profile
+	echo "Now import the settings by copy/pasting 'source ~/.bash_profile'"
+else
+	echo "File '~/.bash_profile' exists."
+fi
+if [[ ! -f ~/.gitconfig ]] ; then
+	echo "[user]
+        email = $(whoami)@$(hostname)
+        name = $(whoami)" > ~/.gitconfig
+	echo "Set Git username and email at '~/.gitconfig'"
+fi

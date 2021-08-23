@@ -1,0 +1,4 @@
+#!/bin/bash
+# Search for common port usages
+
+curl -s "https://isc.sans.edu/api/port/${1}?json" | jq .services

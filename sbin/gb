@@ -1,0 +1,10 @@
+#!/bin/bash
+# List current git branches. If given var1 then change to or create that branch name
+
+git fetch --all
+git remote prune origin
+if [[ -z "$1" ]] ; then
+  git branch -a
+else
+  git checkout "$1" || git checkout -b "$1"
+fi

@@ -1,0 +1,3 @@
+#!/bin/bash
+# print my public keys
+cat ~/.ssh/id_*.pub

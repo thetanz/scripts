@@ -1,0 +1,4 @@
+#!/bin/bash
+# Run a command line chrome that prints full dom after js processing
+
+google-chrome-stable --enable-logging --headless --disable-gpu --no-sandbox --disable-setuid-sandbox  --dump-dom "$1" 2>/dev/null
