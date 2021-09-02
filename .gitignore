@@ -7,3 +7,4 @@ __pycache__
 */.python-version
 .vscode/settings.json
 .vscode/settings.json.lock
+azure/identity-access/iam-report-*.txt
