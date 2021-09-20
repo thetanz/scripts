@@ -22,7 +22,7 @@ gcloud compute instances create ${gcloudhost} \
 --quiet \
 --preemptible \
 --zone ${location} \
---boot-disk-size 12GB \
+--boot-disk-size 10GB \
 --labels job=${job_id} \
 --boot-disk-auto-delete \
 --machine-type e2-medium \
