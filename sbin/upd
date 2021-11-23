@@ -1,15 +1,5 @@
-#!/bin/bash
-# Update your platform. Only debian based rn and expects a low priv user
+#!/bin/zsh
+# Update your scripts repo
 
-set -e
-hostdetails=$( uname -a )
-if [[ "${hostdetails}" == *Darwin* ]]
-then
-  softwareupdate --install -a
-  brew update
-  brew upgrade
-elif [[ "${hostdetails}" == *microsoft* ]]
-then
-  sudo apt update -y
-  sudo apt upgrade -y
-fi
+cd "${0:a:h}"
+git pull
