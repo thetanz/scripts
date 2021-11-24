@@ -21,9 +21,6 @@ set -e
 # | project name, resourceGroup, allowBlobPublicAccess, id
 # 
 
-# wipe output file if already exists
-rm public-blobs.txt ||
-
 current_subscription_context=$(az account show --query name -o tsv)
 echo 'listing all storage accounts in context of:' "${current_subscription_context}"
 # produce a list of storage account names
