@@ -22,9 +22,20 @@ set -e
 # 
 
 current_subscription_context=$(az account show --query name -o tsv)
-echo 'listing all storage accounts in context of:' "${current_subscription_context}"
-# produce a list of storage account names
+if [[ "${current_subscription_context}" == "N/A(tenant level account)" ]] ; then
+  echo "skipping ${current_subscription_context} - tenant level account with no resource affiliation"
+  exit 0
+fi
+
 storageacc_names=`az storage account list --query '[].name' --output tsv`
+if [[ -z "${storageacc_names}" ]] ; then
+  echo "no storage accounts found within: "${current_subscription_context}""
+  exit 0
+else
+  count_found=`echo ${storageacc_names} | wc -w | tr -d ' '`
+  echo "found "${count_found}" storage accounts within: "${current_subscription_context}""
+fi
+
 for account in ${storageacc_names}
 do
   echo 'processing storage account:' ${account}
