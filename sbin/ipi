@@ -1,3 +1,4 @@
 #!/bin/bash
-# Query IP API for any IP details
-curl "http://ip-api.com/${1}"
+# query IP API for any IP details - beware, ip-api believe TLS is a premium feature
+
+curl -s "http://ip-api.com/${1}"
