@@ -1,5 +1,5 @@
 #!/bin/bash
-# Auto commit and push changes. var1 can be commit message or it will prompt for one. dont use spaces
+# auto commit and push changes. var1 can be commit message or it will prompt for one. dont use spaces
 
 set -e
 date

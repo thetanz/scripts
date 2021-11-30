@@ -1,5 +1,5 @@
 #!/bin/bash
-# Test colors on a shell
+# test colors on a shell
 
 printf "          "
 for b in 0 1 2 3 4 5 6 7; do printf "  4${b}m "; done
@@ -14,4 +14,3 @@ for f in "" 30 31 32 33 34 35 36 37; do
         echo
      done
 done
-

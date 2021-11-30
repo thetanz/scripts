@@ -1,5 +1,5 @@
 #!/bin/bash
-# Advanced shortcut for docker-compose up
+# advanced shortcut for docker-compose up
 
 set -e
 

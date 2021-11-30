@@ -1,3 +1,4 @@
 #!/bin/bash
-# Convert epoch int to local datetime
+# convert epoch int to local datetime
+
 test -z "$1" || date -d @$1

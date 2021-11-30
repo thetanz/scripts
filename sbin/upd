@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Update your scripts repo
+# update the thetanz/scripts repo
 
 cd "${0:a:h}"
 git pull

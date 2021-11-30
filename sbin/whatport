@@ -1,4 +1,4 @@
 #!/bin/bash
-# Search for common port usages
+# search for common port usages (i.e 80 is http)
 
 curl -s "https://isc.sans.edu/api/port/${1}?json" | jq .services

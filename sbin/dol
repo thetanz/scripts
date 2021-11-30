@@ -1,5 +1,5 @@
 #!/bin/bash
-# Get logs of the latest or specified container
+# get logs of the latest or specified container
 
 if test ! -z "$1" ; then
   docker logs -f --tail 1000 "$1"

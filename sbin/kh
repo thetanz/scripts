@@ -1,5 +1,5 @@
 #!/bin/bash
-# Healthcheck a kubes service or all services
+# healthcheck a kubes service or all services
 
 if [[ "$1" == "all" ]] || [[ -z "$1" ]] ; then
   sitelist=$( kubectl get deployments -n mdr | grep "1/1" | cut -d ' ' -f 1 | grep -v "op-scim" )

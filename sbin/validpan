@@ -1,5 +1,5 @@
 #!/bin/bash
-# Check if a given credit card number (var1) passes mod10 checksum
+# check if a given credit card number (var1) passes mod10 checksum
 
 pan=$1
 panlen=${#pan}

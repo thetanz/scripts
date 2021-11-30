@@ -1,5 +1,6 @@
 #!/bin/bash
 # list valid NZ PANs forever or until var1=numberToReturn
+
 binranges="483348 428455 454860 531496 467883 500051 483561"
 target=$1
 current=0

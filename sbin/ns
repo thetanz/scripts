@@ -1,13 +1,13 @@
 #!/bin/bash
-# Edit source code of any script in this directory. Use any var2 to prevent auto git pull/push
+# edit source code of any script in this directory. use any var2 to prevent auto git pull/push
 
 set -e
 sourcedir=${PWD}
 cd "$(dirname "$0")"
-echo "Checking for remote changes..."
+echo "checking for remote changes..."
 test ! -z "$2" || git pull --ff-only
 if [[ -z "$1" ]] ; then
-	echo "Exiting."
+	echo "exiting."
 	exit 0
 fi
 nano "$1"
@@ -17,6 +17,6 @@ if [[ "$changes" == *"Changes not staged for commit"* || "$changes" == *"Untrack
         test ! -z "$2" || git add .
 	test ! -z "$2" || gp
 else
-	echo "No local changes applied."
+	echo "no local changes applied."
 fi
 

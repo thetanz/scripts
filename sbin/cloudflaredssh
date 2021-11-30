@@ -1,4 +1,5 @@
 #!/bin/bash
-# CF sssh login to target box
-test -z $1 && echo "must have var1 as target" >&2 && exit 1
+# CF ssh login to target box
+
+test -z $1 && echo "must have var1 as origin hostname" >&2 && exit 1
 cloudflared access ssh-config --hostname "$1"

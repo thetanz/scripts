@@ -1,6 +1,6 @@
 #!/bin/bash
 # run the whitesource unified agent against the current working dir
+
 current_dir="${PWD##*/}"
 api_key="$(cat ~/.wsscreds)"
 java -jar ~/wss-unified-agent.jar  -project "$current_dir" -product "$current_dir" -apiKey "$api_key" -projectVersion "0.0.1" -wss.url "https://saas-eu.whitesourcesoftware.com/agent" -noConfig true
-

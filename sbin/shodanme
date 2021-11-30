@@ -1,3 +1,4 @@
 #!/bin/bash
 # shodan your current egress address
+
 shodan host `curl -s ipinfo.io/ip`

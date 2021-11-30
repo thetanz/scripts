@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shortcut git status info
+# shortcut git status info
 
 git status
 

@@ -1,4 +1,5 @@
 #!/bin/bash
 # lookup ip details for var1
-test -z "$1" && echo "Var must be a single IP" >&2 && exit 1
+
+test -z "$1" && echo "var1 must be a single IP" >&2 && exit 1
 curl -s ipinfo.io/${1} | jq .

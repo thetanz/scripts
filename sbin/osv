@@ -1,5 +1,5 @@
 #!/bin/bash
-# Return a known OS version string
+# return a known OS version string
 
 # Darwin checks 'osx'
 if $( uname -a | grep Darwin &>/dev/null ) ; then

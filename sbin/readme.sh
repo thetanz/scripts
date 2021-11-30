@@ -1,5 +1,5 @@
 #!/bin/bash
-# create a README.md with scripts definitions
+# creates scripts/sbin/README.md based upon directory contents
 
 set -e
 

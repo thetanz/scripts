@@ -1,4 +1,4 @@
 #!/bin/bash
-# List current directory
+# list current directory
 
 ls -C1 -lashtrGh --color "$@"

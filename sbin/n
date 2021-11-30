@@ -1,4 +1,4 @@
 #!/bin/bash
-# Nano shortcut
+# nano shortcut
 
 nano "$@"

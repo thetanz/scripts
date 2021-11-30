@@ -1,5 +1,5 @@
 #!/bin/bash
-# List current git branches. If given var1 then change to or create that branch name
+# list current git branches - if given var1 then change to or create that branch name
 
 git fetch --all
 git remote prune origin

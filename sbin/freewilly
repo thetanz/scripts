@@ -1,3 +1,4 @@
 #!/bin/bash
 # clean all docker images and networks
+
 docker system prune -a -f

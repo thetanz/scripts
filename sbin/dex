@@ -1,17 +1,17 @@
 #!/bin/bash
-# Get a shell in the latest started local container
+# get a shell in the latest started local container
 
 latestcontainer=$( docker ps -q -n1 )
 if test ! -z "$1" ; then
-  echo Searching SHELLs on "$1"
+  echo searching SHELLs on "$1"
   docker exec "$1" ls /bin/ash &>/dev/null && docker exec -it -u root "$1" ash
   docker exec "$1" ls /bin/bash &>/dev/null && docker exec -it -u root "$1" bash
 elif docker ps | grep "$latestcontainer" >/dev/null ; then
-  echo Searching SHELLs on "$latestcontainer"
+  echo searching SHELLs on "$latestcontainer"
   docker exec "$latestcontainer" ls /bin/ash &>/dev/null && docker exec -it -u root "$latestcontainer" ash
   docker exec "$latestcontainer" ls /bin/bash &>/dev/null && docker exec -it -u root "$latestcontainer" bash
   echo
 else
-  echo ERROR: No running containers >&2
+  echo ERROR: no running containers >&2
   exit
 fi
