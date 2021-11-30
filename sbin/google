@@ -1,0 +1,15 @@
+#!/bin/bash
+# googles something in default browers, macos only
+
+if [[ "$OSTYPE" != "darwin"* ]]; then
+  echo "only works on macos sorry"
+  exit 1
+fi
+
+# check $1 is set
+if [[ -z "$1" ]]; then
+  echo "usage: google <search term>"
+  exit 1
+fi
+
+open "https://google.com/search?q=${1}"
