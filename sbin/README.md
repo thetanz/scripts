@@ -1,230 +1,240 @@
-## setup
+# setup
 
 save this repo to `~/scripts`  
 
-        git clone https://github.com/thetanz/scripts.git
+```shell
+git clone https://github.com/thetanz/scripts.git
+```
 
-run `~/scripts/sbin/paths.sh` to add `~/scripts/sbin` to your `~./bash_profile` for future shells
+run `scripts/sbin/paths.sh` to add `scripts/sbin` to your `~./zshrc`
 
-## doco
+# doco
 
-### binupd
+## binupd
 
 _Updates this script dir. i.e. run binupd to get the latest scripts_
 
-### cat
+## cat
 
 _Replace cat with bat so we get awesome output_
 
-### cats
+## cats
 
 _Print the source code of any script in this directory_
 
-### chrome
+## chrome
 
 _Run a command line chrome that prints full dom after js processing_
 
-### cloudflaredssh
+## cloudflaredssh
 
 _CF sssh login to target box_
 
-### colortest
+## colortest
 
 _Test colors on a shell_
 
-### dehash
+## dehash
 
 _Quick dehashed query_
 
-### dex
+## dex
 
 _Get a shell in the latest started local container_
 
-### dim
+## dim
 
 _list all docker images on current system_
 
-### dol
+## dol
 
 _Get logs of the latest or specified container_
 
-### down
+## down
 
 _Take down the current dir docker-compose instance_
 
-### dps
+## dps
 
 _List current running docker containers_
 
-### drm
+## drm
 
 _Kill latest or specified docker container_
 
-### dup
+## dup
 
 _Advanced shortcut for docker-compose up_
 
-### epoch
+## epoch
 
 _Convert epoch int to local datetime_
 
-### freewilly
+## freewilly
 
 _clean all docker images and networks_
 
-### funs
+## funs
 
 _start azure function in current dir_
 
-### ga
+## ga
 
 _Git add shortcut for all files or the specified ones_
 
-### gb
+## gb
 
 _List current git branches. If given var1 then change to or create that branch name_
 
-### gc
+## gc
 
 _Clone a remote repo to local into current dir_
 
-### gf
+## gf
 
 _Show git tracked changes of a file_
 
-### gitcreds
+## gitcreds
 
 _use trufflehog to search the current working dir for creds_
 
-### gl
+## gl
 
 _Git pull the updates of the current dir structure_
 
-### gp
+## google
+
+_googles something in default browers, macos only_
+
+## gp
 
 _Auto commit and push changes. var1 can be commit message or it will prompt for one. dont use spaces_
 
-### greps
+## greps
 
 _search the scripts directory for keyword_
 
-### gs
+## gs
 
 _Shortcut git status info_
 
-### intip
+## intip
 
 _badly determine my internal ip_
 
-### ipgrep
+## ipgrep
 
 _search input for ipv4 and ipv6 addresses_
 
-### ipgrepv4
+## ipgrepv4
 
 _Reed stdin an list nay IPv4 addressees_
 
-### ipgrepv6
+## ipgrepv6
 
 _Search stdin for ipv6 addresses_
 
-### ipi
+## ipi
 
 _Query IP API for any IP details_
 
-### ipinfo
+## ipinfo
 
 _lookup ip details for var1_
 
-### ips-in
+## ips-in
 
 _list IP addresses in file_
 
-### kh
+## kh
 
 _Healthcheck a kubes service or all services_
 
-### kserve
+## kserve
 
 _List all defined kubernetes deployments_
 
-### kstart
+## kstart
 
 _Scale a kuberenetes service up to one or bring all up if unspecified_
 
-### l
+## l
 
 _List current directory_
 
-### myip
+## mailgrep
+
+_best attempts grep for email_
+
+## myip
 
 _return my current IP address_
 
-### n
+## n
 
 _Nano shortcut_
 
-### npmaudit
+## npmaudit
 
 _Auto audit the local package.json and produce 'report.html' output_
 
-### ns
+## ns
 
 _Edit source code of any script in this directory. Use any var2 to prevent auto git pull/push_
 
-### osv
+## osv
 
 _Return a known OS version string_
 
-### pans
+## pans
 
 _list valid NZ PANs forever or until var1=numberToReturn_
 
-### paths
+## paths
 
-_Check for and apply our binaries to the system paths. Ensure git is installed and configured_
+_initialises paths to effectivley use scripts within thetanz/scripts/sbin_
 
-### pubkey
+## ports
+
+_shows running service network interaction (listening ports), macos only_
+
+## pubkey
 
 _print my public keys_
 
-### readme.sh
+## readme.sh
 
 _create a README.md with scripts definitions_
 
-### setprompt
+## shodanme
 
-_Set the prompt '$PS1' variable_
+_shodan your current egress address_
 
-### sonarscan
+## sonarscan
 
 _Scan your current dir for sonar cloud_
 
-### sx
+## sx
 
 _set executable on file_
 
-### upd
-
-_Update your platform. Only debian based rn and expects a low priv user_
-
-### utc
+## utc
 
 _List given date as UTC time_
 
-### validpan
+## validpan
 
 _Check if a given credit card number (var1) passes mod10 checksum_
 
-### wa
+## wa
 
 _Colorful watch wrapper for localhost. take sport as $1_
 
-### whatport
+## whatport
 
 _Search for common port usages_
 
-### wss
+## wss
 
 _run the whitesource unified agent against the current working dir_
 
