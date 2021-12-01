@@ -9,14 +9,13 @@ azfunctions=`az functionapp list --query '[].name' --output tsv`
 functions_count=`echo ${azfunctions} | wc -w | tr -d ' '`
 
 loop_counter=1
+current_subscription=`az account show --query id --output tsv`
 for fn in ${azfunctions}
 do
     echo "processing ${loop_counter} of ${functions_count} - ${fn}"
-    current_subscription=`az account show --query id --output tsv`
     resource_group=`az functionapp list --query "[?name=='${fn}'].resourceGroup"  -o tsv`
     fn_uri="https://management.azure.com/subscriptions/${current_subscription}/resourceGroups/${resource_group}/providers/Microsoft.Web/sites/${fn}/functions?api-version=2017-08-01"
-    fn_authvalues=`az rest --url ${fn_uri} \
-    | jq '.value[].properties | .config.bindings[].authLevel + "," + .config.bindings[].type + "," + .invoke_url_template'`
+    fn_authvalues=`az rest --url ${fn_uri} | jq '.value[].properties | .config.bindings[].authLevel + "," + .config.bindings[].type + "," + .invoke_url_template'`
     # fn_authvalues returns 3 comma separated values - create variable for each
     for authvalue in ${fn_authvalues}
     do
@@ -26,6 +25,7 @@ do
         if [ "$auth_level" == "anonymous" ]
         then
             # check if the function is public by assessing status code of invoke url
+            # just because "anonymous" as fn authlevel this does not mean public :/
             # :enhancement tbd: - check various http verbs
             status_code=`curl -s -o /dev/null -w "%{http_code}" ${invoke_url_template}`
             if [ "${status_code}" != "401" ] && [ "${status_code}" != "403" ]
