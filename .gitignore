@@ -10,3 +10,4 @@ __pycache__
 azure/identity-access/iam-report-*.txt
 azure/results.csv
 sbin/matrix
+azure/functions_without_authentication.csv
