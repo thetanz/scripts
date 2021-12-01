@@ -3,6 +3,7 @@
 # https://docs.microsoft.com/en-au/azure/app-service/overview-authentication-authorization
 
 set -e
+output_filename="functions-noauth.csv"
 
 azfunctions=`az functionapp list --query '[].name' --output tsv`
 functions_count=`echo $azfunctions | wc -w | tr -d ' '`
@@ -36,9 +37,9 @@ do
                 # if CSV header does not exist, add it
                 if [ ! -f "functions_without_authentication.csv" ]
                 then
-                    echo "name,auth_level,auth_type,invoke_url_template" > functions_without_authentication.csv
+                    echo "name,auth_level,auth_type,invoke_url_template" > ${output_filename}
                 fi
-                echo "$fn,$auth_level,$auth_type,$invoke_url_template" >> public-functions.csv
+                echo "$fn,$auth_level,$auth_type,$invoke_url_template" >> ${output_filename}
             fi
         fi
     done
