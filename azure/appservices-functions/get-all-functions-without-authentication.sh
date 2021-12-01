@@ -34,7 +34,7 @@ do
                 echo "auth_level: ${auth_level}"
                 echo "auth_type: ${auth_type}"
                 echo "invoke_url_template: ${invoke_url_template}"
-                # if CSV header does not exist, add it
+                # if CSV header does not exist (assume if no file present) add it
                 if [ ! -f "functions_without_authentication.csv" ]
                 then
                     echo "name,auth_level,auth_type,invoke_url_template" > ${output_filename}
