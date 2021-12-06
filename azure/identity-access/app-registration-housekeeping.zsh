@@ -153,7 +153,7 @@ echo "${appJson}" | grep -v "^$" | while read app ; do
       upnState=`az ad user show --id "${owner}" --query accountEnabled`
       if [[ $upnState == "false" ]] ; then
         error "owner "${owner}" is a disabled azure ad upn"
-        ownerObjectId=`az ad user list --query "[?mail=='${owner}'].objectId[]" --output tsv`
+        ownerObjectId=`az ad user show --id ${owner} | jq -r ".objectId"`
         if [[ $demolition == true ]] ; then
           # remove the owner from the app
           warn "removing owner "${owner}" from app "${appname}" (${appid})..."
