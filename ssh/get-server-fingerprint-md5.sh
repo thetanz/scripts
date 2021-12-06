@@ -12,15 +12,10 @@
 # source: https://gist.github.com/parsa/b37dd02033718729304ff33af261a67f
 # ./ssh-server-fingerprint-md5.sh sftp.uber.com 2222
 
-if [ -z "$1" ]
-  then
-    printf "fqdn required\nusage: ${0} domain port\n"
-    exit 1
-fi
-
-if [ -z "$2" ]
-  then
-    printf "port required\nusage: ${0} domain port\n"
+# if $1 and $2 missing 
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "usage: $0 <host> <port>"
+    echo "example: $0 sftp.uber.com 2222"
     exit 1
 fi
 
