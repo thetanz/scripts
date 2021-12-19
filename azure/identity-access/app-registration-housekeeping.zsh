@@ -193,7 +193,7 @@ echo "${appJson}" | grep -v "^$" | while read app ; do
         else
           audit "audit mode - skipping credential removal"
           if [[ ! -f "${reportdir}/expired-credentials.csv" ]] ; then
-            echo "app,appid,credential,expiry" > "${reportdir}/expired-credentials.csv"
+            echo "app,appid,expiry,credential" > "${reportdir}/expired-credentials.csv"
           fi
           echo "\"${appname}\",\"${appid}\",\"${credExpiry}\",\"${credName}\"" >> "${reportdir}/expired-credentials.csv"
         fi
