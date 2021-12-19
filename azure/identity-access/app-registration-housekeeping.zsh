@@ -141,7 +141,7 @@ echo "${appJson}" | grep -v "^$" | while read app ; do
     if [[ ! -f "${reportdir}/no-owners.csv" ]] ; then
       echo "app,id" > "${reportdir}/no-owners.csv"
     fi
-    echo ""${appname}","${appid}"" >> "${reportdir}/no-owners.csv"
+    echo "\"${appname}\",\"${appid}\"" >> "${reportdir}/no-owners.csv"
   else
     echo "found "${ownerCount}" owner(s)"
     # for each owner check if account is disabled in AAD
@@ -153,7 +153,7 @@ echo "${appJson}" | grep -v "^$" | while read app ; do
       upnState=`az ad user show --id "${owner}" --query accountEnabled`
       if [[ $upnState == "false" ]] ; then
         error "owner "${owner}" is a disabled azure ad upn"
-        ownerObjectId=`az ad user list --query "[?mail=='${owner}'].objectId[]" --output tsv`
+        ownerObjectId=`az ad user show --id ${owner} | jq -r ".objectId"`
         if [[ $demolition == true ]] ; then
           # remove the owner from the app
           warn "removing owner "${owner}" from app "${appname}" (${appid})..."
@@ -164,7 +164,7 @@ echo "${appJson}" | grep -v "^$" | while read app ; do
           if [[ ! -f "${reportdir}/disabled-owners.csv" ]] ; then
             echo "app,appid,owner,objectId,accountEnabled" > "${reportdir}/disabled-owners.csv"
           fi
-          echo ""${appname}","${appid}","${owner}","${ownerObjectId}","${upnState}"" >> "${reportdir}/disabled-owners.csv"
+          echo "\"${appname}\",\"${appid}\",\"${owner}\",\"${ownerObjectId}\",\"${upnState}\"" >> "${reportdir}/disabled-owners.csv"
         fi
       else
         good "owner "${owner}" is enabled"
@@ -195,7 +195,7 @@ echo "${appJson}" | grep -v "^$" | while read app ; do
           if [[ ! -f "${reportdir}/expired-credentials.csv" ]] ; then
             echo "app,appid,credential,expiry" > "${reportdir}/expired-credentials.csv"
           fi
-          echo ""${appname}","${appid}","${credExpiry}","${credName}"" >> "${reportdir}/expired-credentials.csv"
+          echo "\"${appname}\",\"${appid}\",\"${credExpiry}\",\"${credName}\"" >> "${reportdir}/expired-credentials.csv"
         fi
       elif [[ ${expDate} -gt ${futureDate} ]] ; then
         warn "excessive expiration of "${credExpiry}" on credID "${credName}""
@@ -203,7 +203,7 @@ echo "${appJson}" | grep -v "^$" | while read app ; do
         if [[ ! -f "${reportdir}/excessive-duration-credentials.csv" ]] ; then
           echo "app,appid,credential,expiry" > "${reportdir}/excessive-duration-credentials.csv"
         fi
-        echo ""${appname}","${appid}","${credName}","${credExpiry}"" >> "${reportdir}/excessive-duration-credentials.csv"
+        echo "\"${appname}\",\"${appid}\",\"${credName}\",\"${credExpiry}\"" >> "${reportdir}/excessive-duration-credentials.csv"
       else
         good "credential "${credName}" expires "${credExpiry}""
         all_credentials_expired=false
@@ -218,7 +218,7 @@ echo "${appJson}" | grep -v "^$" | while read app ; do
           if [[ ! -f "${reportdir}/expired-apps.csv" ]] ; then
             echo "app,appid,expiry,keyId" > "${reportdir}/expired-apps.csv"
           fi
-          echo ""${appname}","${appid}","${credExpiry}","${credName}"" >> "${reportdir}/expired-apps.csv"
+          echo "\"${appname}\",\"${appid}\",\"${credExpiry}\",\"${credName}\"" >> "${reportdir}/expired-apps.csv"
         fi
       fi
     done
