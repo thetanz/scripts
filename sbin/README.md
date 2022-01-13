@@ -114,6 +114,10 @@ _search the scripts directory for keyword_
 
 _shortcut git status info_
 
+## gsa
+
+_shortcut git submodule add_
+
 ## intip
 
 _try determine current internal ip_
