@@ -6,7 +6,7 @@ save this repo to `~/scripts`
 git clone https://github.com/thetanz/scripts.git
 ```
 
-run `scripts/sbin/paths.sh` to add `scripts/sbin` to your `~./zshrc`
+run `./scripts/sbin/paths` to add `scripts/sbin` to your `~./zshrc`
 
 # doco
 
