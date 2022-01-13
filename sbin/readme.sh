@@ -8,7 +8,7 @@ cd ${scriptsdir}
 
 echo '''# setup
 
-save this repo to `~/scripts`  
+save this repo to `~/scripts`
 
 ```shell
 git clone https://github.com/thetanz/scripts.git
