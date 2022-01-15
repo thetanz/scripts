@@ -22,8 +22,8 @@ run `./scripts/sbin/paths` to add `scripts/sbin` to your `~./zshrc`
 for file in *
 do
   if [ "${file}" != "README.md" ]; then
-    filetype=`file ${file} | cut -d ' ' -f 2`
-    if [ "${filetype}" == "Bourne-Again" ]; then
+    filetype=`file ${file}`
+    if [[ "${filetype}" == *"script text executable"* ]]; then
       definition=`cat $file | sed -n '2p'`
       echo "## ${file}" >> README.md
       echo "" >> README.md

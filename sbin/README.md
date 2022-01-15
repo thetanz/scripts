@@ -1,6 +1,6 @@
 # setup
 
-save this repo to `~/scripts`  
+save this repo to `~/scripts`
 
 ```shell
 git clone https://github.com/thetanz/scripts.git
@@ -69,6 +69,10 @@ _advanced shortcut for docker-compose up_
 ## epoch
 
 _convert epoch int to local datetime_
+
+## erain
+
+_make emoji rain_
 
 ## freewilly
 
@@ -186,9 +190,17 @@ _edit source code of any script in this directory. use any var2 to prevent auto 
 
 _uses https://github.com/thetanz/golang-nslookup_
 
+## openh
+
+_open an fqdn in a browser_
+
 ## osv
 
 _return a known OS version string_
+
+## ouilookup
+
+_lookups a mac address in attempt to vendor correlate_
 
 ## pans
 
@@ -221,6 +233,10 @@ _scan your current dir for sonar cloud_
 ## sx
 
 _set executable on file_
+
+## upd
+
+_update the thetanz/scripts repo_
 
 ## urld
 
