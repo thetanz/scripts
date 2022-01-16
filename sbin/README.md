@@ -166,6 +166,10 @@ _scale a kuberenetes service up to one or bring all up if unspecified_
 
 _list current directory_
 
+## maclean
+
+_macos: empty trash, clear system logs & clear download history from quarantine_
+
 ## mgrep
 
 _best attempts grep for email_
