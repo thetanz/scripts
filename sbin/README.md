@@ -210,6 +210,10 @@ _list valid NZ PANs forever or until var1=numberToReturn_
 
 _initialises paths to effectivley use scripts within thetanz/scripts/sbin_
 
+## pireq
+
+_shortcut to install python3 deps from requirements.txt_
+
 ## ports
 
 _shows running service network interaction (listening ports), macos only_
