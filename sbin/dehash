@@ -7,4 +7,5 @@ source ~/.dehashedcreds
 URL="https://api.dehashed.com/search?query="
 QUERY="$1"
 test -z "{$QUERY}" && echo "specify var1 as a search" >&2 && exit 1 ||:
-curl -s --header "Accept: application/json" -u "${DEHASHED_USER}:${DEHASHED_SECRET}" "${URL}${QUERY}" | jq '.'
+curl -s -H "User-Agent: curl/7.54" --header "Accept: application/json" \
+-u "${DEHASHED_USER}:${DEHASHED_SECRET}" "${URL}${QUERY}" | jq '.'
