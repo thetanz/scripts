@@ -94,6 +94,10 @@ _clone a remote repo to local into current dir_
 
 _show git tracked changes of a file_
 
+## ginfo
+
+_get basic into on the git repo you are within (upstream url, description)_
+
 ## gitcreds
 
 _use trufflehog to search the current working dir for creds_
@@ -121,6 +125,10 @@ _shortcut git status info_
 ## gsa
 
 _shortcut git submodule add_
+
+## http
+
+_python3 simple http server_
 
 ## intip
 
