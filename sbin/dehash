@@ -1,7 +1,12 @@
 #!/bin/bash
-# Quick dehashed query
+# query the dehashed API for compromised credentials
 
 set -e
+
+if [ ! -f ~/.dehashedcreds ]; then
+    echo "~/.dehashedcreds authentication file missing!"
+    exit 1
+fi
 
 source ~/.dehashedcreds
 URL="https://api.dehashed.com/search?query="
