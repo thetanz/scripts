@@ -102,6 +102,10 @@ _get basic into on the git repo you are within (upstream url, description)_
 
 _use trufflehog to search the current working dir for creds_
 
+## gitsubs
+
+_initalise and update submodules within a git repository (git submodule init & update)_
+
 ## gl
 
 _git pull the updates of the current dir structure_
