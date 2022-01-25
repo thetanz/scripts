@@ -1,5 +1,14 @@
 #!/bin/bash
-# CF ssh login to target box
+# use the cloudflared tunnel agent to ssh onto a target fqdn
 
-test -z $1 && echo "must have var1 as origin hostname" >&2 && exit 1
+if [ -z "$1" ]; then
+  echo "usage: cfssh <fqdn>"
+  exit 1
+fi
+
+if ! which cloudflared > /dev/null; then
+  echo "cloudflared required and missing from \$PATH"
+  exit 1
+fi
+
 cloudflared access ssh-config --hostname "$1"
