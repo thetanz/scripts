@@ -1,10 +1,14 @@
 #!/bin/bash
 # uses https://github.com/thetanz/golang-nslookup
 
-# check lookup is in path
 if ! which lookup > /dev/null; then
   echo "lookup not found in path"
   echo "go checkout https://github.com/thetanz/golang-nslookup/releases"
+  exit 1
+fi
+
+if [ -z "$1" ]; then
+  echo "usage: nsl <domain>"
   exit 1
 fi
 
