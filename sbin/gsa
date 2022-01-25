@@ -7,3 +7,4 @@ if [[ -z "${1}" ]]; then
 fi
 
 git submodule add ${1}
+git commit -m "added submodule ${1}"
