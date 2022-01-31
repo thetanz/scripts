@@ -22,13 +22,13 @@ _replace cat with bat so we get awesome output_
 
 _print the source code of any script in this directory_
 
+## cfssh
+
+_use the cloudflared tunnel agent to ssh onto a target fqdn_
+
 ## chrome
 
 _run a command line chrome that prints full dom after js processing_
-
-## cloudflaredssh
-
-_CF ssh login to target box_
 
 ## colortest
 
@@ -36,7 +36,7 @@ _test colors on a shell_
 
 ## dehash
 
-_Quick dehashed query_
+_query the dehashed API for compromised credentials_
 
 ## dex
 
@@ -73,6 +73,10 @@ _convert epoch int to local datetime_
 ## erain
 
 _make emoji rain_
+
+## finfo
+
+_quickly retrieve get file info and hashes_
 
 ## freewilly
 

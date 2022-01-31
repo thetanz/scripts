@@ -21,7 +21,8 @@ run `./scripts/sbin/paths` to add `scripts/sbin` to your `~./zshrc`
 
 for file in *
 do
-  if [ "${file}" != "README.md" ]; then
+  if [ "${file}" != "README.md" ] && [ "${file}" != "matrix" ]
+  then
     filetype=`file ${file}`
     if [[ "${filetype}" == *"script text executable"* ]]; then
       definition=`cat $file | sed -n '2p'`
