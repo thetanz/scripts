@@ -190,6 +190,10 @@ _list current directory_
 
 _macos: empty trash, clear system logs & clear download history from quarantine_
 
+## macupd
+
+_macos: update os, applications, homebrew etc_
+
 ## mgrep
 
 _best attempts grep for email_
