@@ -254,6 +254,10 @@ _print my public keys_
 
 _creates scripts/sbin/README.md based upon directory contents_
 
+## servicescan
+
+_use nmap to run a service identification scan (ip and optional port)_
+
 ## shodanme
 
 _shodan your current egress address_
