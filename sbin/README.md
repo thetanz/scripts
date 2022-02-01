@@ -266,6 +266,10 @@ _shodan your current egress address_
 
 _scan your current dir for sonar cloud_
 
+## sshmd5
+
+_generate an md5 signature of a ssh server_
+
 ## sx
 
 _set executable on file_
@@ -290,6 +294,10 @@ _check if a given credit card number (var1) passes mod10 checksum_
 
 _colorful watch wrapper for localhost (local http develop) - takes port as $1_
 
+## webspeed
+
+_website speed tests (response time analytics)_
+
 ## whatport
 
 _search for common port usages (i.e 80 is http)_
@@ -297,4 +305,8 @@ _search for common port usages (i.e 80 is http)_
 ## wss
 
 _run the whitesource unified agent against the current working dir_
+
+## zonetransfer
+
+_attempt an DNS AXFR (zone transfer) with dig_
 
