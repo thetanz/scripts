@@ -1,12 +1,9 @@
 #!/bin/bash
+# website speed tests (response time analytics)
 
-# ./test-website-speed.sh theta.co.nz
-
-if [ -z "${1}" ]
-  then
-    printf "domain name required\n"
-    echo ''${0}' theta.co.nz'
-    exit 1
+if [ -z "$1" ]; then
+  echo "usage: webspeed <webpage uri>"
+  exit 1
 fi
 
 curl -s -w \
