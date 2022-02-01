@@ -7,10 +7,10 @@ if [ -z "$1" ]; then
 fi
 
 if [ -x "$(command -v curl)" ]; then
-  curl -s ipinfo.io/1.1.1.1 -H "User-Agent: curl/7.54" | jq 'del(.readme)'
+  curl -s ipinfo.io/${1} -H "User-Agent: curl/7.54" | jq 'del(.readme)'
   #curl -s ipinfo.io/1.1.1.1 -H "User-Agent: curl/7.54" | jq 'del(.readme) | del(.hostname) | del(.region) | del(.country) | del(.ip) | del(.city) | del(.org)'
 fi
 
 if [ -x "$(command -v shodan)" ]; then
-  shodanout=`shodan host ${1}`
+  shodan host ${1}
 fi
