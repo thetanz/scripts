@@ -164,7 +164,7 @@ _query IP API for any IP details - beware, ip-api believe TLS is a premium featu
 
 ## ipinfo
 
-_lookup ip details for var1_
+_enrich an ip address with shodan & ipinfo_
 
 ## ips-in
 
