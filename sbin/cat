@@ -1,4 +1,8 @@
 #!/bin/bash
 # replace cat with bat so we get awesome output
 
-bat -pp "$@"
+if ! which bat > /dev/null; then
+    cat "$@"
+else
+    bat -pp "$@"
+fi
