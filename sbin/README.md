@@ -78,6 +78,10 @@ _make emoji rain_
 
 _quickly retrieve get file info and hashes_
 
+## flushdns
+
+_flush dns cache on macOS (monterey)_
+
 ## freewilly
 
 _clean all docker images and networks_
