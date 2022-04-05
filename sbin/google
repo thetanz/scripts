@@ -8,8 +8,10 @@ fi
 
 # check $1 is set
 if [[ -z "$1" ]]; then
-  echo "usage: google <search term>"
-  exit 1
+  printf 'search query:' && read query
+else
+  query=$1
 fi
 
-open "https://google.com/search?q=${1}"
+query=$(echo $query | sed 's/ /%20/g')
+open "https://google.com/search?q=${query}"
