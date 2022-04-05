@@ -94,25 +94,25 @@ fi
 set -e
 
 
+# fetch and count all service principles
 blue "Fetching a list of all Service Principles..."
-az ad sp list --all 2>/dev/null > all-sp.json
-
-exit
-
-
-# fetch and count all app registrations
-az ad app list --all > "${jsondir}/apps.json"
-if [[ -s "${jsondir}/apps.json" ]] ; then
-appCount=`jq -r '. | length' "${jsondir}/apps.json"`
-blue "found ${appCount} app registrations"
+az ad sp list --all 2>/dev/null > "${reportdir}/all-sp.json"
+if [[ -s "${reportdir}/all-sp.json" ]] ; then
+appCount=`jq -r '. | length' "${reportdir}/all-sp.json"`
+echo "Found ${appCount} service principles"
+echo
 else
-echo "Could not export application list" >&2
+echo "Could not export service principle list" >&2
 exit 1
 fi
 
+
+# TODO WIP
+exit
+
 counter=1
 # for each app
-jq -c '.[]' "${jsondir}/apps.json" | while read app ; do
+jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
 
   # parse the relevant fields
   appname=`echo -E "${app}" | jq -r ".displayName"`

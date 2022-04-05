@@ -3,9 +3,9 @@
 
 if [[ "$1" == "all" ]] || [[ -z "$1" ]] ; then
   ks | while read deploy ; do
-    kubectl scale deploy/$deploy --replicas=1
+    kubectl scale -n mdr deploy/$deploy --replicas=1
     sleep 1
   done
 else
-  kubectl scale deploy/$( ks $1 ) --replicas=1
+  kubectl scale -n mdr deploy/$( ks $1 ) --replicas=1
 fi

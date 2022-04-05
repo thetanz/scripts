@@ -10,3 +10,6 @@ __pycache__
 azure/identity-access/iam-report-*.txt
 sbin/matrix
 **.csv
+sp-export
+all-sp.json
+export/
