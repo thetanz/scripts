@@ -1,17 +1,19 @@
 #!/bin/zsh
 
 # exports all azure ad service principles 'sp-export/YYYY-MM-DD/json'
-# reviews all exports to create actionable CSVs of problematic applications in 'sp-export/YYYY-MM-DD'
 # nd: we suppress all existing az cli warnings because, while it's deprecated, there's no alternative
 
 ## OUTPUT CSVs
-# expired-credentials.csv: one line per expired credential per application
-# no-owners.csv: one line per application without any owners
-# app-consents.csv: one line per consent provided to an application
-# disabled-owners.csv: one line per disabled owner of an application
-# excessive-duration-credentials.csv: one line per application credential with an expiry +2years away
-# non-theta-owners.csv: one line per owner of an application which is not correctly domain owned
-# admin-theta-owners.csv: one line per owner of an application which is using their ADASH account
+# no-owners.csv: one line per service principle without any owners
+# errors.log: service principles which failed to be parsed
+
+## TODO
+## expired-credentials.csv: one line per expired credential per application
+## app-consents.csv: one line per consent provided to an application
+## disabled-owners.csv: one line per disabled owner of an application
+## excessive-duration-credentials.csv: one line per application credential with an expiry +2years away
+## non-theta-owners.csv: one line per owner of an application which is not correctly domain owned
+## admin-theta-owners.csv: one line per owner of an application which is using their ADASH account
 
 set -e
 
@@ -74,13 +76,15 @@ echo "saving findings within ${reportdir}"
 echo
 
 # pre-populdate CSV headers
-echo "\"appname\",\"appid\",\"ownermail\",\"ownerObjectId\",\"upnState\",\"ownerMailList\"" > "${reportdir}/disabled-owners.csv"
-echo "\"appname\",\"appid\"" > "${reportdir}/no-owners.csv"
-echo "\"appname\",\"appid\",\"ownermail\"" > "${reportdir}/non-theta-owners.csv"
-echo "\"appname\",\"appid\",\"ownermail\"" > "${reportdir}/admin-theta-owners.csv"
-echo "\"appname\",\"appid\",\"credExpiry\",\"credName\",\"ownerMailList\"" > "${reportdir}/expired-credentials.csv"
-echo "\"appname\",\"appid\",\"consentPurpose\",\"consentType\",\"consentValue\",\"ownerMailList\"" > "${reportdir}/app-consents.csv"
-echo "\"appname\",\"appid\",\"credName\",\"credExpiry\",\"ownerMailList\"" > "${reportdir}/excessive-duration-credentials.csv"
+echo "\"spname\",\"spid\",\"spobjectid\",\"sptenantid\"" > "${reportdir}/no-owners.csv"
+
+## TODO
+#echo "\"appname\",\"appid\",\"ownermail\",\"ownerObjectId\",\"upnState\",\"ownerMailList\"" > "${reportdir}/disabled-owners.csv"
+#echo "\"appname\",\"appid\",\"ownermail\"" > "${reportdir}/non-theta-owners.csv"
+#echo "\"appname\",\"appid\",\"ownermail\"" > "${reportdir}/admin-theta-owners.csv"
+#echo "\"appname\",\"appid\",\"credExpiry\",\"credName\",\"ownerMailList\"" > "${reportdir}/expired-credentials.csv"
+#echo "\"appname\",\"appid\",\"consentPurpose\",\"consentType\",\"consentValue\",\"ownerMailList\"" > "${reportdir}/app-consents.csv"
+#echo "\"appname\",\"appid\",\"credName\",\"credExpiry\",\"ownerMailList\"" > "${reportdir}/excessive-duration-credentials.csv"
 
 
 # check we have neccesary permissions to probe ms graph for audit timestamps
@@ -107,125 +111,47 @@ exit 1
 fi
 
 
-# TODO WIP
-exit
-
-counter=1
-# for each app
+counter=0
+# for each sp
 jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
+  counter=$((counter+1))
+  echo "appcounter: ${counter}/${appCount}"
+
+  # check we can parse the response
+  set +e
+  canjson=$( echo -E "${sp}" | jq .)
+  if [[ $? != 0 ]] ; then
+    error "Failed parse this SP, saving to errors.log"
+    echo "${sp}" >> "${reportdir}/errors.log"
+    echo
+    continue
+  fi
+  set -e
 
   # parse the relevant fields
-  appname=`echo -E "${app}" | jq -r ".displayName"`
-  appid=`echo -E "${app}" | jq -r ".appId"`
-  appPassCreds=`echo -E "${app}" | jq -c ".passwordCredentials[]"`
-  appKeyCreds=`echo -E "${app}" | jq -c ".keyCredentials[]"`
-  appConsents=`echo -E "${app}" | jq -c ".oauth2Permissions[]"`
-  echo "appcounter: ${counter}/${appCount}"
+  appname=`echo -E "${sp}" | jq -r ".appDisplayName"`
+  appid=`echo -E "${sp}" | jq -r ".appId"`
+  appobjectid=`echo -E "${sp}" | jq -r ".objectId"`
+  apptenantid=`echo -E "${sp}" | jq -r ".appOwnerTenantId"`
   echo "appname: ${appname}"
   echo "appid: ${appid}"
 
   # create a file for each app based on manifest
-  echo -E "${app}" | jq -c > "${jsondir}/${appid}.json"
-
-  # try fetch a timestamp for the last signin
-  last_use_tz=`timeout 30s az rest --uri "https://graph.microsoft.com/beta/auditLogs/signIns?filter=appId eq '"${appid}"'&top=1" | jq -r '.value[].createdDateTime' ||:`
-  # if last_use_tz exists
-  if [ -z "${last_use_tz}" ]; then
-    warn "last signin: unknown"
-  else
-    good "last signin: "${last_use_tz}""
-  fi
+  echo -E "${sp}" | jq -c > "${jsondir}/${appid}.json"
 
   # fetch the owner UPN for the app
-  appOwners=$( az ad app owner list --id "${appid}" | jq -c '.[] // empty' )
+  appOwners=$( az ad sp owner list --id "${appobjectid}" 2>/dev/null | jq -c '.[] // empty' )
   ownerCount=$( echo -E "${appOwners}" | grep -v "^$" | wc -l | tr -d "[[:blank:]]" )
   ownerMailList=$( echo -E "${appOwners}" | jq -r '.mail // empty ' | grep -v "^$" | tr '\n' ' ' )
 
   # if no owners:
   if [[ ${ownerCount} == 0 ]] ; then
-    error "no owners associated with this app"
-    echo "\"${appname}\",\"${appid}\"" >> "${reportdir}/no-owners.csv"
-
-  # owners exist, so check em:
-  else
-    echo "found "${ownerCount}" owner(s)"
-    # for each owner check if account is disabled in AAD
-    echo -E "${appOwners}" | jq -r '.mail' | while read owner ; do
-
-      # if the owner does not end with context domain, warn
-      if [[ "$owner" != *"@${domain}" ]] ; then
-        warn "owner email '${owner}' does not end with context domain, '${domain}'"
-        echo "\"${appname}\",\"${appid}\",\"${owner}\"" >> "${reportdir}/non-theta-owners.csv"
-      else
-
-        # check valid domain owner is enabled
-        upnState=`az ad user show --id "${owner}" --query accountEnabled`
-        if [[ $upnState == "false" ]] ; then
-          error "owner email '${owner}' is a disabled azure ad upn"
-          ownerObjectId=`az ad user show --id "${owner}" | jq -r ".objectId"`
-          echo "\"${appname}\",\"${appid}\",\"${owner}\",\"${ownerObjectId}\",\"${upnState}\",\"${ownerMailList}\"" >> "${reportdir}/disabled-owners.csv"
-        else
-          good "owner '${owner}' is enabled"
-        fi
-      fi
-
-      # check if the owner is a-XYZ account
-      if [[ "$owner" == "a-"* ]] || [[ "$owner" == "admin-"* ]] || [[ "$owner" == "csp-"* ]] ; then
-        warn "owner email '${owner}' is domain admin of '${domain}'"
-        echo "\"${appname}\",\"${appid}\",\"${owner}\"" >> "${reportdir}/admin-theta-owners.csv"
-      fi
-
-    done
-
+    warn "no owners associated with this sp"
+    echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\"" >> "${reportdir}/no-owners.csv"
   fi
 
-  # check certs & creds
-  credCount=`echo "${appPassCreds}\n${appKeyCreds}" | grep -v "^$" | wc -l | tr -d "[[:blank:]]"`
-  if [[ $credCount == 0 ]] ; then
-    good "app uses no credentials"
-  else
-    appPass_count=`echo "${appPassCreds}" | grep -v "^$" | wc -l | tr -d "[[:blank:]]"`
-    appKey_count=`echo "${appKeyCreds}" | grep -v "^$" | wc -l | tr -d "[[:blank:]]"`
-    echo "found "${credCount}" credential(s) - "${appPass_count}" password(s) and "${appKey_count}" certificate(s)"
-
-    # loop over all app creds, checking expiry dates
-    echo "${appPassCreds}\n${appKeyCreds}" | grep -v "^$" | while read cred ; do
-      credName=`echo -E "${cred}" | jq -r '.keyId'`
-      credExpiry=`echo -E "${cred}" | jq -r '.endDate'`
-      expDate=`gdate +%s -d "${credExpiry}"`
-
-      # if app is already expired
-      if [[ "$(gdate +%s)" -gt "${expDate}" ]] ; then
-        error "expired: "${credExpiry}" on "${credName}""
-        echo "\"${appname}\",\"${appid}\",\"${credExpiry}\",\"${credName}\",\"${ownerMailList}\"" >> "${reportdir}/expired-credentials.csv"
-
-      # if app expiration is unreasonably long
-      elif [[ ${expDate} -gt ${futureDate} ]] ; then
-        warn "excessive expiration of "${credExpiry}" on credID "${credName}""
-        echo "\"${appname}\",\"${appid}\",\"${credName}\",\"${credExpiry}\",\"${ownerMailList}\"" >> "${reportdir}/excessive-duration-credentials.csv"
-      else
-        good "credential "${credName}" expires "${credExpiry}""
-      fi
-    done
-  fi
-
-  # check oauth consents
-  consentCount=`echo "${appConsents}" | grep -v "^$" | wc -l | tr -d "[[:blank:]]"`
-  if [[ $consentCount == 0 ]] ; then
-    good "app has no explicit oauth scopes"
-  else
-    echo "found "${consentCount}" oauth scope(s)"
-    echo "${appConsents}" | grep -v "^$" | while read consent ; do
-      consentPurpose=`echo -E "${consent}" | jq -r '.adminConsentDescription' | awk '{print tolower($0)}'`
-      consentType=`echo -E "${consent}" | jq -r '.type' | awk '{print tolower($0)}'`
-      consentValue=`echo -E "${consent}" | jq -r '.value' | awk '{print tolower($0)}'`
-      echo "purpose: ${consentPurpose}"
-      echo "type: ${consentType}:${consentValue}"
-      echo "\"${appname}\",\"${appid}\",\"${consentPurpose}\",\"${consentType}\",\"${consentValue}\",\"${ownerMailList}\"" >> "${reportdir}/app-consents.csv"
-    done
-  fi
 
   # print space and increment app counter
   echo
-  counter=$((counter+1))
 done
+

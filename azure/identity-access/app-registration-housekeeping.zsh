@@ -1,7 +1,7 @@
 #!/bin/zsh
 
-# exports all azure ad application registrations to 'export/YYYY-MM-DD/json'
-# reviews all exports to create actionable CSVs of problematic applications in 'export/YYYY-MM-DD'
+# exports all azure ad application registrations to 'app-export/YYYY-MM-DD/json'
+# reviews all exports to create actionable CSVs of problematic applications in 'app-export/YYYY-MM-DD'
 # nb: the auditLogs endpoint has a 30 days rolling retention window (regardless of p1/2 sku)
 
 ## OUTPUT CSVs
@@ -15,7 +15,7 @@
 
 set -e
 
-outdir="export"
+outdir="app-export"
 mkdir -p "${outdir}" ||:
 
 # set the threshold for what is defined as an 'excessive' expiration period
