@@ -4,7 +4,7 @@
 # nd: we suppress all existing az cli warnings because, while it's deprecated, there's no alternative
 
 ## OUTPUT CSVs
-# no-owners.csv: one line per service principle without any owners
+# sp-review.csv: one line per service principle
 # errors.log: service principles which failed to be parsed
 
 ## TODO
@@ -15,8 +15,14 @@
 ## non-theta-owners.csv: one line per owner of an application which is not correctly domain owned
 ## admin-theta-owners.csv: one line per owner of an application which is using their ADASH account
 
-set -e
+## NOTES
+## These are Tenant IDs for Microsoft Applications
+# f8cdef31-a31e-4b4a-93e4-5f571e91255a	Microsoft Service	From MS AAD Service
+# 72f988bf-86f1-41af-91ab-2d7cd011db47	Microsoft		From MS
+# 9188040d-6c67-4c5b-b112-36a304b66dad	MSA Created		Not created through Azure AD
 
+
+set -e
 outdir="sp-export"
 mkdir -p "${outdir}" ||:
 
@@ -76,15 +82,7 @@ echo "saving findings within ${reportdir}"
 echo
 
 # pre-populdate CSV headers
-echo "\"spname\",\"spid\",\"spobjectid\",\"sptenantid\"" > "${reportdir}/no-owners.csv"
-
-## TODO
-#echo "\"appname\",\"appid\",\"ownermail\",\"ownerObjectId\",\"upnState\",\"ownerMailList\"" > "${reportdir}/disabled-owners.csv"
-#echo "\"appname\",\"appid\",\"ownermail\"" > "${reportdir}/non-theta-owners.csv"
-#echo "\"appname\",\"appid\",\"ownermail\"" > "${reportdir}/admin-theta-owners.csv"
-#echo "\"appname\",\"appid\",\"credExpiry\",\"credName\",\"ownerMailList\"" > "${reportdir}/expired-credentials.csv"
-#echo "\"appname\",\"appid\",\"consentPurpose\",\"consentType\",\"consentValue\",\"ownerMailList\"" > "${reportdir}/app-consents.csv"
-#echo "\"appname\",\"appid\",\"credName\",\"credExpiry\",\"ownerMailList\"" > "${reportdir}/excessive-duration-credentials.csv"
+echo "\"sp-name\",\"sp-id\",\"sp-object-id\",\"sp-tenant-id\",\"sp-type\",\"sp-owners\",\"sp-keys\",\"sp-passwords\",\"sp-roles\",\"sp-oauthperms\"" > "${reportdir}/sp-review.csv"
 
 
 # check we have neccesary permissions to probe ms graph for audit timestamps
@@ -110,7 +108,6 @@ echo "Could not export service principle list" >&2
 exit 1
 fi
 
-
 counter=0
 # for each sp
 jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
@@ -130,11 +127,22 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
 
   # parse the relevant fields
   appname=`echo -E "${sp}" | jq -r ".appDisplayName"`
+  # managed IDs seem to use displayName instead of appDisplayName
+  if [[ "${appname}" == "null" ]] ; then
+    appname=`echo -E "${sp}" | jq -r ".displayName"`
+  fi
   appid=`echo -E "${sp}" | jq -r ".appId"`
+  apptype=`echo -E "${sp}" | jq -r ".servicePrincipalType"`
   appobjectid=`echo -E "${sp}" | jq -r ".objectId"`
   apptenantid=`echo -E "${sp}" | jq -r ".appOwnerTenantId"`
   echo "appname: ${appname}"
   echo "appid: ${appid}"
+
+  # count array fields of interest
+  appkeycreds=`echo -E "${sp}" | jq -r ".keyCredentials | length"`
+  apppasscreds=`echo -E "${sp}" | jq -r ".passwordCredentials | length"`
+  approles=`echo -E "${sp}" | jq -r ".appRoles | length"`
+  appoauthperms=`echo -E "${sp}" | jq -r ".oauth2Permissions | length"`
 
   # create a file for each app based on manifest
   echo -E "${sp}" | jq -c > "${jsondir}/${appid}.json"
@@ -144,12 +152,7 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   ownerCount=$( echo -E "${appOwners}" | grep -v "^$" | wc -l | tr -d "[[:blank:]]" )
   ownerMailList=$( echo -E "${appOwners}" | jq -r '.mail // empty ' | grep -v "^$" | tr '\n' ' ' )
 
-  # if no owners:
-  if [[ ${ownerCount} == 0 ]] ; then
-    warn "no owners associated with this sp"
-    echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\"" >> "${reportdir}/no-owners.csv"
-  fi
-
+  echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\",\"${apptype}\",\"${ownerCount}\",\"${appkeycreds}\",\"${apppasscreds}\",\"${approles}\",\"${appoauthperms}\"" >> "${reportdir}/sp-review.csv"
 
   # print space and increment app counter
   echo
