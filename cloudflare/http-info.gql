@@ -1,0 +1,48 @@
+{
+  viewer {
+    zones(filter: {zoneTag: "${YOURZONE}"}) {
+      httpRequests1mGroups(orderBy: [sum_requests_DESC],
+        limit: 100, 
+        filter: {datetime_geq: "2022-04-04T00:00:00Z", datetime_lt: "2022-04-07T00:00:00Z"}) {
+        dimensions {
+          datetimeMinute
+        }
+        sum {
+          browserMap {
+            pageViews
+            uaBrowserFamily
+          }
+          bytes
+          cachedBytes
+          cachedRequests
+          contentTypeMap {
+            bytes
+            requests
+            edgeResponseContentTypeName
+          }
+          clientSSLMap {
+            requests
+            clientSSLProtocol
+          }
+          countryMap {
+            bytes
+            requests
+            threats
+            clientCountryName
+          }
+          encryptedBytes
+          encryptedRequests
+          pageViews
+          requests
+          responseStatusMap {
+            requests
+            edgeResponseStatus
+          }
+        }
+        uniq {
+          uniques
+        }
+      }
+    }
+  }
+}

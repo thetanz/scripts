@@ -1,0 +1,9 @@
+{
+  viewer {
+    zones(filter: {zoneTag: "${YOURZONE}"}) {
+      firewallEventsAdaptiveByTimeGroups(limit: 1, filter: {action_neq: "allow", date_gt: "2022-04-04"}) {
+        count
+      }
+    }
+  }
+}

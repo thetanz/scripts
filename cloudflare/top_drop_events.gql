@@ -1,0 +1,27 @@
+{
+  viewer {
+    zones(filter: {
+      zoneTag: "${YOURZONE}"}) {
+      firewallEventsAdaptiveGroups
+      (orderBy: [count_DESC],limit: 10,
+        filter: {
+          action_neq: allow,
+          datetime_gt: "2022-04-04T00:00:00Z",
+          datetime_lt: "2022-04-05T00:00:00Z"
+        }
+      )
+      {
+        count
+        dimensions {
+          clientCountryName
+          clientRefererHost
+          clientASNDescription
+          clientIP
+          clientRequestHTTPHost
+          clientRequestPath
+          action
+        }
+      }
+    }
+  }
+}

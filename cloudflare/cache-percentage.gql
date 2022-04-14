@@ -1,0 +1,15 @@
+{
+  viewer {
+    zones(filter: {zoneTag: "${YOURZONE}"}) {
+      httpRequests1dGroups(orderBy: [date_ASC], limit: 5, filter: {date_gt: "2022-02-02"}) {
+        date: dimensions {
+          date
+        }
+        sum {
+          cachedBytes
+          bytes
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  viewer {
+    zones(filter: {zoneTag: "${YOURZONE}"}) {
+      firewallEventsAdaptive(limit: 1, filter: {date_gt: "2022-04-04"}) {
+        action
+        clientASNDescription
+        clientAsn
+        clientCountryName
+        clientIP
+        clientRefererHost
+        clientRefererPath
+        clientRefererQuery
+        clientRefererScheme
+        clientRequestHTTPHost
+        clientRequestHTTPMethodName
+        clientRequestHTTPProtocol
+        clientRequestPath
+        clientRequestScheme
+        edgeResponseStatus
+        originResponseStatus
+        originatorRayName
+        rayName
+        ruleId
+        userAgent
+        clientRequestQuery
+      }
+    }
+  }
+}
