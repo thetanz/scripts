@@ -73,8 +73,8 @@ reportdir="${outdir}/${today}"
 jsondir="${reportdir}/json/"
 
 # if the report dir already exists, delete it and recreate it
-if [[ -d "${reportdir}" ]]; then
-  rm -rf "${reportdir}"
+if [[ -d "${jsondir}" ]]; then
+  rm -rf "${jsondir}"
 fi
 mkdir -p "${reportdir}" ||:
 mkdir -p "${jsondir}" ||:
@@ -82,23 +82,32 @@ echo "saving findings within ${reportdir}"
 echo
 
 # pre-populdate CSV headers
-echo "\"sp-name\",\"sp-id\",\"sp-object-id\",\"sp-tenant-id\",\"sp-type\",\"sp-owners\",\"sp-keys\",\"sp-passwords\",\"sp-roles\",\"sp-oauthperms\"" > "${reportdir}/sp-review.csv"
+echo "\"sp-name\",\"sp-id\",\"sp-object-id\",\"sp-tenant-id\",\"sp-type\",\"sp-last-signin\",\"sp-owners\",\"sp-keys\",\"sp-keys-expired\",\"sp-passwords\",\"sp-passwords-expired\",\"sp-roles\",\"sp-oauthperms\"" > "${reportdir}/sp-review.csv"
 
 
 # check we have neccesary permissions to probe ms graph for audit timestamps
 set +e
-az rest --uri "https://graph.microsoft.com/beta/auditLogs/signIns?top=1" > "${jsondir}/last-ad-signin.json"
-if [[ ! -s "${jsondir}/last-ad-signin.json" ]]; then
+echo "Checking you have enough permissions to run this script..."
+if [[ ! -s "${reportdir}/last-ad-signin.json" ]]; then
+az rest --uri "https://graph.microsoft.com/beta/auditLogs/signIns?top=1" > "${reportdir}/last-ad-signin.json"
+fi
+set -e
+if [[ ! -s "${reportdir}/last-ad-signin.json" ]]; then
   error "missing permissions to fetch audit stamps from ms graph"
   error "ensure you have AuditLog.Read.All and Directory.Read.All"
   exit 1
+else
+echo "OK"
 fi
-set -e
+echo
 
-
-# fetch and count all service principles
+# fetch and count all service principles if required
+if [[ ! -s "${reportdir}/all-sp.json" ]] ; then
 blue "Fetching a list of all Service Principles..."
 az ad sp list --all 2>/dev/null > "${reportdir}/all-sp.json"
+else
+echo "List of Service Principles already exists"
+fi
 if [[ -s "${reportdir}/all-sp.json" ]] ; then
 appCount=`jq -r '. | length' "${reportdir}/all-sp.json"`
 echo "Found ${appCount} service principles"
@@ -112,7 +121,8 @@ counter=0
 # for each sp
 jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   counter=$((counter+1))
-  echo "appcounter: ${counter}/${appCount}"
+  echo -n "appcounter: "
+  blue "${counter}/${appCount}"
 
   # check we can parse the response
   set +e
@@ -134,8 +144,9 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   appid=`echo -E "${sp}" | jq -r ".appId"`
   apptype=`echo -E "${sp}" | jq -r ".servicePrincipalType"`
   appobjectid=`echo -E "${sp}" | jq -r ".objectId"`
-  apptenantid=`echo -E "${sp}" | jq -r ".appOwnerTenantId"`
-  echo "appname: ${appname}"
+  apptenantid=`echo -E "${sp}" | jq -r ".appOwnerTenantId // empty"`
+  echo -n "appname: "
+  good "${appname}"
   echo "appid: ${appid}"
 
   # count array fields of interest
@@ -144,17 +155,94 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   approles=`echo -E "${sp}" | jq -r ".appRoles | length"`
   appoauthperms=`echo -E "${sp}" | jq -r ".oauth2Permissions | length"`
 
+
+  # check keycredential dates
+  expiredKeyCredentials=0
+  if [[ "${appkeycreds}" == "0" ]] ; then
+    echo "SP uses no key creds"
+  else
+    echo "Checking SP key creds"
+    echo -E "${sp}" | jq -c ".keyCredentials[]" | while read KEYCRED ; do
+      endDate=$( echo -E "${KEYCRED}" | jq -r '.endDate' )
+      expDate=$( gdate +%s -d "${endDate}" )
+
+      # if key is already expired
+      if [[ "$(gdate +%s)" -gt "${expDate}" ]] ; then
+        warn "A Key Credential is expired"
+        expiredKeyCredentials=$((expiredKeyCredentials+1))
+      fi
+
+    done
+    echo "Total key credentials: ${appkeycreds}"
+    echo "Total expired key credentials: ${expiredKeyCredentials}"
+  fi
+
+  # check passwoprd credential dates
+  expiredPassCredentials=0
+  if [[ "${apppasscreds}" == "0" ]] ; then
+    echo "SP uses no password creds"
+  else
+    echo "Checking SP password creds"
+    echo -E "${sp}" | jq -c ".passwordCredentials[]" | while read PASSCRED ; do
+      endDate=$( echo -E "${PASSCRED}" | jq -r '.endDate' )
+      expDate=$( gdate +%s -d "${endDate}" )
+
+      # if password is already expired
+      if [[ "$(gdate +%s)" -gt "${expDate}" ]] ; then
+        warn "A Password Credential is expired"
+        expiredPassCredentials=$((expiredPassCredentials+1))
+      fi
+
+    done
+    echo "Total password credentials: ${apppasscreds}"
+    echo "Total expired password credentials: ${expiredPassCredentials}"
+  fi
+
   # create a file for each app based on manifest
-  echo -E "${sp}" | jq -c > "${jsondir}/${appid}.json"
+  echo -E "${sp}" | jq . > "${jsondir}/${appid}.json"
 
   # fetch the owner UPN for the app
   appOwners=$( az ad sp owner list --id "${appobjectid}" 2>/dev/null | jq -c '.[] // empty' )
   ownerCount=$( echo -E "${appOwners}" | grep -v "^$" | wc -l | tr -d "[[:blank:]]" )
   ownerMailList=$( echo -E "${appOwners}" | jq -r '.mail // empty ' | grep -v "^$" | tr '\n' ' ' )
 
-  echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\",\"${apptype}\",\"${ownerCount}\",\"${appkeycreds}\",\"${apppasscreds}\",\"${approles}\",\"${appoauthperms}\"" >> "${reportdir}/sp-review.csv"
+  # create a file for each app owner list
+  echo -E "${appOwners}" | jq . > "${jsondir}/${appid}-owner-list.json"
+
+  # check existing SP owners
+  if [[ ${ownerCount} == 0 ]] ; then
+    warn "no owners associated with this sp"
+  else
+    echo "Owners: ${ownerMailList}"
+  fi
+
+  # get last sp signin date
+  lastsignin="ERROR"
+  while [[ "${lastsignin}" == "ERROR"* ]] ; do
+    echo "Getting last SP sign in..."
+    lastsignin=$( az rest --uri "https://graph.microsoft.com/beta/auditLogs/signIns?filter=(appId+eq+'"${appid}"'+AND+signInEventTypes/any(t:+t+eq+'interactiveUser'+or+t+eq+'nonInteractiveUser'+or+t+eq+'servicePrincipal'+or+t+eq+'managedIdentity'))&orderby=createdDateTime+desc&top=1" 2>&1 ||: )
+    if [[ "${lastsignin}" == "ERROR"* ]] ; then
+      error "Rate limit Error occurred, will retry in 10s"
+      sleep 10
+    fi
+  done
+  lastlogindate=$( echo -E "${lastsignin}" | jq -r '.value[].createdDateTime // empty' )
+  if [[ -z "${lastlogindate}" ]] ; then
+    warn "No signins for SP"
+  else
+    echo "Last Sign In: ${lastlogindate}"
+  fi
+
+  # create a file for each app last login
+  echo -E "${lastsignin}" | jq . > "${jsondir}/${appid}-last-signin.json"
+
+  echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\",\"${apptype}\",\"${lastlogindate}\",\"${ownerMailList}\",\"${appkeycreds}\",\"${expiredKeyCredentials}\",\"${apppasscreds}\",\"${expiredPassCredentials}\",\"${approles}\",\"${appoauthperms}\"" >> "${reportdir}/sp-review.csv"
 
   # print space and increment app counter
   echo
+
 done
 
+## TODO
+# possible import of SP app role assignments
+# az rest --method get --url https://graph.microsoft.com/v1.0/servicePrincipals/{YOUR_SERVICE_PRINCIPAL_ID}/appRoleAssignments

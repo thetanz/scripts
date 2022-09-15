@@ -3,12 +3,12 @@
 
 set -e
 
-if [ ! -f ~/.dehashedcreds ]; then
-    echo "~/.dehashedcreds authentication file missing!"
+if [ ! -f ~/.creds/dehashed ]; then
+    echo "~/.creds/dehashed authentication file missing!"
     exit 1
 fi
 
-source ~/.dehashedcreds
+source ~/.creds/dehashed
 URL="https://api.dehashed.com/search?query="
 QUERY="$1"
 test -z "{$QUERY}" && echo "specify var1 as a search" >&2 && exit 1 ||:
