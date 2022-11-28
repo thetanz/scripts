@@ -1,4 +1,4 @@
 #!/bin/bash
-# list all docker images on current system
+# list all nerdctl images on current system
 
-docker images --all --no-trunc
+nerdctl images --all --no-trunc

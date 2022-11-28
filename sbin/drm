@@ -1,12 +1,12 @@
 #!/bin/bash
-# kill latest or specified docker container
+# kill latest or specified nerdctl container
 
 if test ! -z "$1" ; then
-  docker rm -f "$1"
+  nerdctl rm -f "$1"
   else
-  latestcontainer=$( docker ps -n1 -q )
+  latestcontainer=$( nerdctl ps -n1 -q )
   if test ! -z "$latestcontainer" ; then
-    docker rm -f "$latestcontainer"
+    nerdctl rm -f "$latestcontainer"
   else
     echo No running containers >&2
     exit
