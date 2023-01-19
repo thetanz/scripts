@@ -112,7 +112,7 @@ jq -c '.[]' "${jsondir}/apps.json" | while read app ; do
   appid=`echo -E "${app}" | jq -r ".appId"`
   appPassCreds=`echo -E "${app}" | jq -c ".passwordCredentials[]"`
   appKeyCreds=`echo -E "${app}" | jq -c ".keyCredentials[]"`
-  appConsents=`echo -E "${app}" | jq -c ".oauth2Permissions[]"`
+  appConsents=`echo -E "${app}" | jq -c ".api.oauth2PermissionScopes[]"`
   echo "appcounter: ${counter}/${appCount}"
   echo "appname: ${appname}"
   echo "appid: ${appid}"
@@ -184,7 +184,7 @@ jq -c '.[]' "${jsondir}/apps.json" | while read app ; do
     # loop over all app creds, checking expiry dates
     echo "${appPassCreds}\n${appKeyCreds}" | grep -v "^$" | while read cred ; do
       credName=`echo -E "${cred}" | jq -r '.keyId'`
-      credExpiry=`echo -E "${cred}" | jq -r '.endDate'`
+      credExpiry=`echo -E "${cred}" | jq -r '.endDateTime'`
       expDate=`gdate +%s -d "${credExpiry}"`
 
       # if app is already expired

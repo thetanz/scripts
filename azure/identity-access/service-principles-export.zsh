@@ -55,7 +55,7 @@ if ! command -v az >/dev/null 2>&1; then
 else
   accountcontext=`az account show`
   domain=`echo -E "${accountcontext}" | jq -r .user.name | cut -d@ -f2`
-  tenant_id=`echo -E "${accountcontext}" | jq -r .tenantId`
+  tenant_id=`echo -E "${accountcontext}" | jq -r ".appOwnerOrganizationId"`
   echo "context tenant domain: ${domain}"
   echo "context tenant id: ${tenant_id}"
   echo
@@ -82,7 +82,7 @@ echo "saving findings within ${reportdir}"
 echo
 
 # pre-populdate CSV headers
-echo "\"sp-name\",\"sp-id\",\"sp-object-id\",\"sp-tenant-id\",\"sp-type\",\"sp-last-signin\",\"sp-owners\",\"sp-keys\",\"sp-keys-expired\",\"sp-passwords\",\"sp-passwords-expired\",\"sp-roles\",\"sp-oauthperms\"" > "${reportdir}/sp-review.csv"
+echo "\"Name\",\"ID\",\"Object ID\",\"Home Tenant ID\",\"Type\",\"Last Signin\",\"Owners\",\"Disabled Owner Count\",\"Key Count\",\"Keys Expired\",\"Password Count\",\"Passwords Expired\",\"Roles\",\"OAuth Permissions Count\",\"Oauth Permissions Description\",\"SAML Notification Emails\",\"Disabled SAML Emails\"" > "${reportdir}/sp-review.csv"
 
 
 # check we have neccesary permissions to probe ms graph for audit timestamps
@@ -143,18 +143,44 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   fi
   appid=`echo -E "${sp}" | jq -r ".appId"`
   apptype=`echo -E "${sp}" | jq -r ".servicePrincipalType"`
-  appobjectid=`echo -E "${sp}" | jq -r ".objectId"`
-  apptenantid=`echo -E "${sp}" | jq -r ".appOwnerTenantId // empty"`
+  appobjectid=`echo -E "${sp}" | jq -r ".id"`
+  apptenantid=`echo -E "${sp}" | jq -r ".appOwnerOrganizationId // empty"`
   echo -n "appname: "
   good "${appname}"
   echo "appid: ${appid}"
+
+  # exclude ms apps
+  if [[ ${apptenantid} == "f8cdef31-a31e-4b4a-93e4-5f571e91255a" ]] \
+    || [[ ${apptenantid} == "72f988bf-86f1-41af-91ab-2d7cd011db47" ]] \
+    || [[ ${apptenantid} == "9188040d-6c67-4c5b-b112-36a304b66dad" ]]
+  then
+    echo "skipping MS app"
+    echo
+    continue
+  fi
 
   # count array fields of interest
   appkeycreds=`echo -E "${sp}" | jq -r ".keyCredentials | length"`
   apppasscreds=`echo -E "${sp}" | jq -r ".passwordCredentials | length"`
   approles=`echo -E "${sp}" | jq -r ".appRoles | length"`
-  appoauthperms=`echo -E "${sp}" | jq -r ".oauth2Permissions | length"`
+  appoauthperms=`echo -E "${sp}" | jq -r ".oauth2PermissionScopes | length"`
+  appoauthdesc=`echo -E "${sp}" | jq -r '.oauth2PermissionScopes[].adminConsentDisplayName' | paste -sd, -`
+  appnotemail=`echo -E "${sp}" | jq -r '.notificationEmailAddresses[]' | paste -sd, -`
+  appnotemaillist=`echo -E "${sp}" | jq -r '.notificationEmailAddresses[]'`
 
+  # check notification email disabled state
+  disabledNotificationCount=0
+  if [[ ! -z ${appnotemaillist} ]] ; then
+    echo "${appnotemaillist}" | while read EMAIL ; do
+      isEmailEnabled=$( az ad user show --id "${EMAIL}" --query accountEnabled 2>&1 ||: )
+      if [[ "${isEmailEnabled}" == "" ]] ; then
+        echo "Notification email ${EMAIL} is enabled"
+      else
+        warn "Notification email ${EMAIL} is disabled"
+        disabledNotificationCount=$((disabledNotificationCount+1))
+      fi
+    done
+  fi
 
   # check keycredential dates
   expiredKeyCredentials=0
@@ -163,7 +189,7 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   else
     echo "Checking SP key creds"
     echo -E "${sp}" | jq -c ".keyCredentials[]" | while read KEYCRED ; do
-      endDate=$( echo -E "${KEYCRED}" | jq -r '.endDate' )
+      endDate=$( echo -E "${KEYCRED}" | jq -r '.endDateTime' )
       expDate=$( gdate +%s -d "${endDate}" )
 
       # if key is already expired
@@ -184,7 +210,7 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   else
     echo "Checking SP password creds"
     echo -E "${sp}" | jq -c ".passwordCredentials[]" | while read PASSCRED ; do
-      endDate=$( echo -E "${PASSCRED}" | jq -r '.endDate' )
+      endDate=$( echo -E "${PASSCRED}" | jq -r '.endDateTime' )
       expDate=$( gdate +%s -d "${endDate}" )
 
       # if password is already expired
@@ -202,9 +228,9 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   echo -E "${sp}" | jq . > "${jsondir}/${appid}.json"
 
   # fetch the owner UPN for the app
-  appOwners=$( az ad sp owner list --id "${appobjectid}" 2>/dev/null | jq -c '.[] // empty' )
+  appOwners=$( az ad sp owner list --id "${appobjectid}" 2>/dev/null | jq -c '.[] // empty' | grep -v 'microsoft.graph.servicePrincipal' ||: )
   ownerCount=$( echo -E "${appOwners}" | grep -v "^$" | wc -l | tr -d "[[:blank:]]" )
-  ownerMailList=$( echo -E "${appOwners}" | jq -r '.mail // empty ' | grep -v "^$" | tr '\n' ' ' )
+  ownerMailList=$( echo -E "${appOwners}" | jq -r '.mail // empty ' | grep -v "^$" | paste -sd, - )
 
   # create a file for each app owner list
   echo -E "${appOwners}" | jq . > "${jsondir}/${appid}-owner-list.json"
@@ -214,6 +240,21 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
     warn "no owners associated with this sp"
   else
     echo "Owners: ${ownerMailList}"
+  fi
+
+  # check owner disabled state
+  disabledOwnerCount=0
+  if [[ ${ownerCount} != 0 ]] ; then
+    ownerList=$( echo "${appOwners}" | jq -r '.userPrincipalName' )
+    echo "${ownerList}" | while read OWNER ; do
+      isEnabled=$( az ad user show --id "${OWNER}" --query accountEnabled 2>&1 )
+      if [[ "${isEnabled}" == "" ]] ; then
+        echo "Owner ${OWNER} is enabled"
+      else
+        warn "Owner ${OWNER} is disabled"
+        disabledOwnerCount=$((disabledOwnerCount+1))
+      fi
+    done
   fi
 
   # get last sp signin date
@@ -236,7 +277,7 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   # create a file for each app last login
   echo -E "${lastsignin}" | jq . > "${jsondir}/${appid}-last-signin.json"
 
-  echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\",\"${apptype}\",\"${lastlogindate}\",\"${ownerMailList}\",\"${appkeycreds}\",\"${expiredKeyCredentials}\",\"${apppasscreds}\",\"${expiredPassCredentials}\",\"${approles}\",\"${appoauthperms}\"" >> "${reportdir}/sp-review.csv"
+  echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\",\"${apptype}\",\"${lastlogindate}\",\"${ownerMailList}\",\"${disabledOwnerCount}\",\"${appkeycreds}\",\"${expiredKeyCredentials}\",\"${apppasscreds}\",\"${expiredPassCredentials}\",\"${approles}\",\"${appoauthperms}\",\"${appoauthdesc}\",\"${appnotemail}\",\"${disabledNotificationCount}\"" >> "${reportdir}/sp-review.csv"
 
   # print space and increment app counter
   echo
