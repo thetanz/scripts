@@ -12,6 +12,7 @@
 # excessive-duration-credentials.csv: one line per application credential with an expiry +2years away
 # non-theta-owners.csv: one line per owner of an application which is not correctly domain owned
 # admin-theta-owners.csv: one line per owner of an application which is using their ADASH account
+# api-permissions.csv: one line per application with graph api consent
 
 set -e
 
@@ -81,6 +82,7 @@ echo "\"appname\",\"appid\",\"ownermail\"" > "${reportdir}/admin-theta-owners.cs
 echo "\"appname\",\"appid\",\"credExpiry\",\"credName\",\"ownerMailList\"" > "${reportdir}/expired-credentials.csv"
 echo "\"appname\",\"appid\",\"consentPurpose\",\"consentType\",\"consentValue\",\"ownerMailList\"" > "${reportdir}/app-consents.csv"
 echo "\"appname\",\"appid\",\"credName\",\"credExpiry\",\"ownerMailList\"" > "${reportdir}/excessive-duration-credentials.csv"
+echo "\"appname\",\"appid\",\"permissionList\"" > "${reportdir}/api-permissions.csv"
 
 
 # check we have neccesary permissions to probe ms graph for audit timestamps
@@ -116,6 +118,21 @@ jq -c '.[]' "${jsondir}/apps.json" | while read app ; do
   echo "appcounter: ${counter}/${appCount}"
   echo "appname: ${appname}"
   echo "appid: ${appid}"
+
+  # match api permissions to role names
+  permlist=""
+  echo -E "${app}" | jq -r '.requiredResourceAccess[].resourceAccess[].id' | while read ID ; do
+    matchperm=$( grep "${ID}" allperms.txt | awk ' {print $1 } ' )
+    if [[ "" == "${matchperm}" ]] ; then
+      matchperm="Unknown"
+    fi
+    permlist="${permlist}"'\n'"${matchperm}"
+  done
+  permrow=$( echo "${permlist}" | grep -v '^$' | paste -sd, - )
+  echo "App permissions: ${permrow}"
+  if [[ "${permrow}" != "" ]] ; then
+    echo "\"${appname}\",\"${appid}\",\"${permrow}\"" >> "${reportdir}/api-permissions.csv"
+  fi
 
   # create a file for each app based on manifest
   echo -E "${app}" | jq -c > "${jsondir}/${appid}.json"

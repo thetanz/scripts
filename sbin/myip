@@ -1,4 +1,6 @@
 #!/bin/bash
 # return my current IP address
 
-curl -s https://checkip.amazonaws.com
+response=$( curl -s https://checkip.amazonaws.com )
+echo ${response}
+echo ${response} | pbcopy

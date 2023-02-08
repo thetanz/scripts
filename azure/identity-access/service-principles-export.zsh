@@ -8,10 +8,7 @@
 # errors.log: service principles which failed to be parsed
 
 ## TODO
-## expired-credentials.csv: one line per expired credential per application
 ## app-consents.csv: one line per consent provided to an application
-## disabled-owners.csv: one line per disabled owner of an application
-## excessive-duration-credentials.csv: one line per application credential with an expiry +2years away
 ## non-theta-owners.csv: one line per owner of an application which is not correctly domain owned
 ## admin-theta-owners.csv: one line per owner of an application which is using their ADASH account
 
@@ -82,7 +79,7 @@ echo "saving findings within ${reportdir}"
 echo
 
 # pre-populdate CSV headers
-echo "\"Name\",\"ID\",\"Object ID\",\"Home Tenant ID\",\"Type\",\"Last Signin\",\"Owners\",\"Disabled Owner Count\",\"Key Count\",\"Keys Expired\",\"Password Count\",\"Passwords Expired\",\"Roles\",\"OAuth Permissions Count\",\"Oauth Permissions Description\",\"SAML Notification Emails\",\"Disabled SAML Emails\"" > "${reportdir}/sp-review.csv"
+echo "\"Name\",\"ID\",\"Object ID\",\"Home Tenant ID\",\"Type\",\"Created\",\"Last Signin\",\"Owners\",\"Disabled Owner Count\",\"Roles\",\"OAuth Permissions Count\",\"Oauth Permissions Description\",\"SAML Notification Emails\",\"Disabled SAML Emails\",\"Has App Reg?\"" > "${reportdir}/sp-review.csv"
 
 
 # check we have neccesary permissions to probe ms graph for audit timestamps
@@ -167,6 +164,15 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   appoauthdesc=`echo -E "${sp}" | jq -r '.oauth2PermissionScopes[].adminConsentDisplayName' | paste -sd, -`
   appnotemail=`echo -E "${sp}" | jq -r '.notificationEmailAddresses[]' | paste -sd, -`
   appnotemaillist=`echo -E "${sp}" | jq -r '.notificationEmailAddresses[]'`
+  creationDate=`echo -E "${sp}" | jq -r '.createdDateTime'`
+
+  # check if the entapp has an appreg
+  hasAppReg=""
+  response=$( az ad app show --id ${appid} 2>/dev/null ||: )
+  if [[ "${response}" != "" ]] ; then
+    echo "This enterprise app has an associated app registration"
+    hasAppReg="TRUE"
+  fi
 
   # check notification email disabled state
   disabledNotificationCount=0
@@ -180,48 +186,6 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
         disabledNotificationCount=$((disabledNotificationCount+1))
       fi
     done
-  fi
-
-  # check keycredential dates
-  expiredKeyCredentials=0
-  if [[ "${appkeycreds}" == "0" ]] ; then
-    echo "SP uses no key creds"
-  else
-    echo "Checking SP key creds"
-    echo -E "${sp}" | jq -c ".keyCredentials[]" | while read KEYCRED ; do
-      endDate=$( echo -E "${KEYCRED}" | jq -r '.endDateTime' )
-      expDate=$( gdate +%s -d "${endDate}" )
-
-      # if key is already expired
-      if [[ "$(gdate +%s)" -gt "${expDate}" ]] ; then
-        warn "A Key Credential is expired"
-        expiredKeyCredentials=$((expiredKeyCredentials+1))
-      fi
-
-    done
-    echo "Total key credentials: ${appkeycreds}"
-    echo "Total expired key credentials: ${expiredKeyCredentials}"
-  fi
-
-  # check passwoprd credential dates
-  expiredPassCredentials=0
-  if [[ "${apppasscreds}" == "0" ]] ; then
-    echo "SP uses no password creds"
-  else
-    echo "Checking SP password creds"
-    echo -E "${sp}" | jq -c ".passwordCredentials[]" | while read PASSCRED ; do
-      endDate=$( echo -E "${PASSCRED}" | jq -r '.endDateTime' )
-      expDate=$( gdate +%s -d "${endDate}" )
-
-      # if password is already expired
-      if [[ "$(gdate +%s)" -gt "${expDate}" ]] ; then
-        warn "A Password Credential is expired"
-        expiredPassCredentials=$((expiredPassCredentials+1))
-      fi
-
-    done
-    echo "Total password credentials: ${apppasscreds}"
-    echo "Total expired password credentials: ${expiredPassCredentials}"
   fi
 
   # create a file for each app based on manifest
@@ -277,7 +241,7 @@ jq -c '.[]' "${reportdir}/all-sp.json" | while read sp ; do
   # create a file for each app last login
   echo -E "${lastsignin}" | jq . > "${jsondir}/${appid}-last-signin.json"
 
-  echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\",\"${apptype}\",\"${lastlogindate}\",\"${ownerMailList}\",\"${disabledOwnerCount}\",\"${appkeycreds}\",\"${expiredKeyCredentials}\",\"${apppasscreds}\",\"${expiredPassCredentials}\",\"${approles}\",\"${appoauthperms}\",\"${appoauthdesc}\",\"${appnotemail}\",\"${disabledNotificationCount}\"" >> "${reportdir}/sp-review.csv"
+  echo "\"${appname}\",\"${appid}\",\"${appobjectid}\",\"${apptenantid}\",\"${apptype}\",\"${creationDate}\",\"${lastlogindate}\",\"${ownerMailList}\",\"${disabledOwnerCount}\",\"${approles}\",\"${appoauthperms}\",\"${appoauthdesc}\",\"${appnotemail}\",\"${disabledNotificationCount}\",\"${hasAppReg}\"" >> "${reportdir}/sp-review.csv"
 
   # print space and increment app counter
   echo
