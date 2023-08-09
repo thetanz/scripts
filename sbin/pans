@@ -9,8 +9,11 @@ while true ; do
     account=$( openssl rand 6 | od -DAn | tr -d ' ' | cut -c 1-10 )
     newpan=${cardbin}${account}
     if validpan ${newpan} >/dev/null ; then
-      echo ${newpan}
+      month=$( shuf -i 1-12 -n 1 )
+      year=$( shuf -i 23-26 -n 1 )
+      code=$( shuf -i 000-999 -n 1 )
       current=$((current+1))
+      echo "${newpan} ${month}/${year} ${code}"
       if [[ $target != "" ]] && [[ $current -ge $target ]] ; then
         exit 0
       fi

@@ -13,10 +13,3 @@ fi
 nano "$1"
 chmod +x "$1"
 changes=$( git status 2>&1 )
-if [[ "$changes" == *"Changes not staged for commit"* || "$changes" == *"Untracked files"* ]] ; then
-        test ! -z "$2" || git add .
-	test ! -z "$2" || gp
-else
-	echo "no local changes applied."
-fi
-

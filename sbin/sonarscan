@@ -3,15 +3,19 @@
 
 test ! -f ~/.creds/sonarkey && echo "must have Sonarcloud API key at ~/.creds/sonarkey" >&2 && exit 1 ||:
 
+
+proj_name=$( echo "${PWD}" | rev | cut -d'/' -f1 | rev)
+org_name="theta"
+
 docker run \
 -i --rm --name sonar \
 -p9000:9000 \
--e "SONAR_SCANNER_OPTS=-Xmx512m -Dsonar.login=$(cat ~/.sonarcreds)" \
--v "${PWD}:/usr/src:ro" \
+-e "SONAR_SCANNER_OPTS=-Xmx512m -Dsonar.login=$(cat ~/.creds/sonarkey) -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=${org_name} -Dsonar.projectKey=${proj_name}" \
+-v "${PWD}:/usr/src" \
+-v "${HOME}/.sonar/cache:/opt/sonar-scanner/.sonar/cache" \
 sonarsource/sonar-scanner-cli -X
 
 
 exit
 
--v "/root/.sonar/cache:/opt/sonar-scanner/.sonar/cache" \
 
